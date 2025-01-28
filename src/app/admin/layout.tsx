@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, LayoutDashboard, LogOut, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,19 +12,14 @@ import { useRouter } from 'next/navigation'; // For redirecting after logout
 // Define menu items array
 const menuItems = [
     {
+        title: 'Expenses',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+        path: '/admin/expenses',
+    },
+    {
         title: 'New Expense',
-        icon: <LayoutDashboard className="h-4 w-4" />,
+        icon: <Plus className="h-4 w-4" />,
         path: '/admin/new-expense',
-    },
-    {
-        title: 'Dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        path: '/admin/dashboard',
-    },
-    {
-        title: 'My Expenses',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-        path: '/admin/my-expenses',
     }
 ];
 
@@ -64,23 +59,18 @@ export default function AdminLayout({
         }
     };
 
-    // If the session check is still loading, render nothing or a loading spinner
-    if (isLoggedIn === null) {
-        return <div>Loading...</div>;
-    }
-
     return (
         <div className="min-h-screen flex">
             {/* Sidebar Navigation */}
             <div
                 className={cn(
-                    'bg-gray-900 text-white transition-all duration-300',
-                    isCollapsed ? 'w-16' : 'w-64'
+                    "bg-gray-900 text-white transition-all duration-300",
+                    isCollapsed ? "w-16" : "w-64"
                 )}
             >
                 <div className="p-4 flex items-center justify-between">
                     {!isCollapsed && (
-                        <h1 className="text-xl font-bold">1111 - Platform</h1>
+                        <h1 className="text-xl font-bold">My Finance</h1>
                     )}
                     <Button
                         variant="ghost"
@@ -97,8 +87,8 @@ export default function AdminLayout({
                             key={item.path}
                             href={item.path}
                             className={cn(
-                                'flex items-center px-4 py-2 hover:bg-gray-800',
-                                pathname === item.path && 'bg-gray-800'
+                                "flex items-center px-4 py-2 hover:bg-gray-800",
+                                pathname === item.path && "bg-gray-800"
                             )}
                         >
                             {item.icon}
@@ -107,20 +97,19 @@ export default function AdminLayout({
                             )}
                         </Link>
                     ))}
-
-                    {/* Logout Button */}
-                    <Button
-                        variant="ghost"
-                        size="sm"
+                    <Link
+                        href="#"
+                        onClick={async () => {
+                            await supabase.auth.signOut();
+                            router.push("/");
+                        }}
                         className={cn(
-                            'flex items-center px-4 py-2 hover:bg-gray-800',
-                            pathname === '/logout' && 'bg-gray-800'
+                            "flex items-center px-4 py-2 hover:bg-gray-800"
                         )}
-                        onClick={handleLogout}
                     >
                         <LogOut className="h-4 w-4" />
                         {!isCollapsed && <span className="ml-2">Logout</span>}
-                    </Button>
+                    </Link>
                 </nav>
             </div>
 

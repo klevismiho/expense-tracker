@@ -1,53 +1,52 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const HomePage = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [loadingSession, setLoadingSession] = useState<boolean>(true); // Track session loading
     const router = useRouter();
+    const [loadingSession, setLoadingSession] = useState(true);
 
-    // Check if user is already logged in
+    // Check if the user is already logged in
     useEffect(() => {
         const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+
             if (session) {
-                router.push("/admin/dashboard");
+                router.push("/admin/expenses");
+            } else {
+                setLoadingSession(false);
             }
-            setLoadingSession(false);
         };
 
         checkSession();
     }, [router]);
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
+    useEffect(() => {
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                router.push("/admin/expenses");
+            }
         });
 
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-            return;
-        }
+        // Clean up the listener
+        return () => {
+            authListener?.subscription.unsubscribe();
+        };
+    }, [router]);
 
-        // Redirect to the dashboard after successful login
-        router.push("/admin/dashboard");
-    };
-
+    // Show a loading state while checking the session
     if (loadingSession) {
-        // Optionally render a loading spinner or placeholder while checking the session
-        return <div>Loading...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="text-gray-700">Loading...</div>
+            </div>
+        );
     }
 
     return (
@@ -57,55 +56,11 @@ const HomePage = () => {
                     Login
                 </h2>
 
-                {error && (
-                    <p className="text-red-500 text-center mb-4">{error}</p>
-                )}
-
-                <form onSubmit={handleLogin}>
-                    <div className="mb-4">
-                        <label
-                            className="block text-sm font-medium text-gray-600"
-                            htmlFor="email"
-                        >
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            id="email"
-                            className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <label
-                            className="block text-sm font-medium text-gray-600"
-                            htmlFor="password"
-                        >
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            className="mt-2 p-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
-                </form>
+                <Auth
+                    supabaseClient={supabase}
+                    appearance={{ theme: ThemeSupa }}
+                    providers={["google", "github"]} // Add OAuth providers here
+                />
             </div>
         </div>
     );
