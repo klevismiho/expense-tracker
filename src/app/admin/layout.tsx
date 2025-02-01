@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, LayoutDashboard, LogOut, Plus } from 'lucide-react';
+import { Menu, LayoutDashboard, LogOut, Plus, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,11 @@ const menuItems = [
         title: 'New Expense',
         icon: <Plus className="h-4 w-4" />,
         path: '/admin/new-expense',
+    },
+    {
+        title: 'My Account',
+        icon: <User className="h-4 w-4" />,
+        path: '/admin/account',
     }
 ];
 
