@@ -16,32 +16,47 @@ type Expense = {
     date: string;
 };
 
-const HomePage = () => {
+type DailyExpense = {
+    date: string;
+    amount: number;
+};
+
+const ExpensesPage = () => {
     const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [dailyExpenses, setDailyExpenses] = useState<DailyExpense[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchExpenses = async () => {
-            const { data, error } = await supabase
-                .from("expenses")
-                .select(`
-                    *,
-                    category:expense_categories(id, name)
-                `)
-                .order('date', { ascending: true });
+        const fetchData = async () => {
+            try {
+                // Fetch detailed expenses
+                const { data: expensesData, error: expensesError } = await supabase
+                    .from("expenses")
+                    .select(`
+                        *,
+                        category:expense_categories(id, name)
+                    `)
+                    .order('date', { ascending: true });
 
-            if (error) {
-                setError(error.message);
+                // Fetch daily aggregated expenses
+                const { data: dailyData, error: dailyError } = await supabase
+                    .rpc('get_daily_expenses');
+                    // You'll need to create this function in Supabase - see below
+
+                if (expensesError) throw expensesError;
+                if (dailyError) throw dailyError;
+
+                setExpenses(expensesData);
+                setDailyExpenses(dailyData);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to fetch data");
+            } finally {
                 setLoading(false);
-                return;
             }
-
-            setExpenses(data);
-            setLoading(false);
         };
 
-        fetchExpenses();
+        fetchData();
     }, []);
 
     const handleDelete = async (id: string) => {
@@ -90,7 +105,7 @@ const HomePage = () => {
 
     return (
         <div>
-            <AllExpensesChart expenses={expenses} />
+            <AllExpensesChart expenses={dailyExpenses} />
             <div className="mt-6">
                 <ExpensesList 
                     expenses={expenses} 
@@ -102,4 +117,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default ExpensesPage;

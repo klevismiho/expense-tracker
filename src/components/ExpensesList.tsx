@@ -102,7 +102,7 @@ const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
                                                 }
                                             />
                                         ) : (
-                                            new Date(expense.date).toLocaleDateString()
+                                            new Date(expense.date).toLocaleDateString('en-GB')
                                         )}
                                     </td>
                                     <td className="py-2 px-4 flex gap-2">
