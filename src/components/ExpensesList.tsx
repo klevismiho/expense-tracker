@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useMemo } from "react";
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,10 @@ interface Props {
 const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editedExpense, setEditedExpense] = useState<Expense | null>(null);
+
+    const totalAmount = useMemo(() => {
+        return expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    }, [expenses]);
 
     const handleEdit = (expense: Expense) => {
         setEditingId(expense.id);
@@ -86,7 +90,7 @@ const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
                                                 }
                                             />
                                         ) : (
-                                            expense.amount
+                                            Number.isInteger(expense.amount) ? expense.amount.toString() : expense.amount.toFixed(2)
                                         )}
                                     </td>
                                     <td className="py-2 px-4">{expense.category?.name || 'N/A'}</td>
@@ -140,6 +144,11 @@ const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
                                     </td>
                                 </tr>
                             ))}
+                            <tr className="bg-gray-50 font-semibold">
+                                <td className="py-3 px-4">Total</td>
+                                <td className="py-3 px-4">{Number.isInteger(totalAmount) ? totalAmount.toString() : totalAmount.toFixed(2)}</td>
+                                <td colSpan={3}></td>
+                            </tr>
                         </tbody>
                     </table>
                 </CardContent>
