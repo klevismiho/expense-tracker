@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
     AreaChart,
     Area,
@@ -47,57 +47,74 @@ const AllExpensesChart: React.FC<AllExpensesChartProps> = ({ expenses }) => {
                 break;
         }
     
-        console.log('Cutoff date:', cutoffDate);
-        console.log('Original data:', expenses);
-        
-        const filtered = expenses.filter(expense => 
+        return expenses.filter(expense => 
             new Date(expense.date) >= cutoffDate
         );
-        
-        console.log('Filtered data:', filtered);
-        return filtered;
     };
 
-    const filteredData = filterExpenses(expenses, dateRange);
+    const { filteredData, periodTotal } = useMemo(() => {
+        const filtered = filterExpenses(expenses, dateRange);
+        const total = filtered.reduce((sum, expense) => sum + expense.amount, 0);
+        return {
+            filteredData: filtered,
+            periodTotal: total
+        };
+    }, [expenses, dateRange]);
+
     const formattedData = filteredData.map((expense) => ({
         ...expense,
         date: new Date(expense.date).toLocaleDateString('en-GB'),
     }));
 
+    const getRangeLabel = (range: DateRange) => {
+        switch (range) {
+            case '7d': return '7 Days';
+            case '1m': return '1 Month';
+            case '3m': return '3 Months';
+            case '1y': return '1 Year';
+            case 'all': return 'All Time';
+        }
+    };
+
     return (
         <Card className="shadow-md">
             <CardContent className="p-4">
-                <div className="flex gap-2 mb-4">
-                    <Button 
-                        variant={dateRange === '7d' ? 'default' : 'outline'}
-                        onClick={() => setDateRange('7d')}
-                    >
-                        7 Days
-                    </Button>
-                    <Button 
-                        variant={dateRange === '1m' ? 'default' : 'outline'}
-                        onClick={() => setDateRange('1m')}
-                    >
-                        1 Month
-                    </Button>
-                    <Button 
-                        variant={dateRange === '3m' ? 'default' : 'outline'}
-                        onClick={() => setDateRange('3m')}
-                    >
-                        3 Months
-                    </Button>
-                    <Button 
-                        variant={dateRange === '1y' ? 'default' : 'outline'}
-                        onClick={() => setDateRange('1y')}
-                    >
-                        1 Year
-                    </Button>
-                    <Button 
-                        variant={dateRange === 'all' ? 'default' : 'outline'}
-                        onClick={() => setDateRange('all')}
-                    >
-                        All Time
-                    </Button>
+                <div className="flex flex-col gap-4 mb-4">
+                    <div className="flex gap-2">
+                        <Button 
+                            variant={dateRange === '7d' ? 'default' : 'outline'}
+                            onClick={() => setDateRange('7d')}
+                        >
+                            7 Days
+                        </Button>
+                        <Button 
+                            variant={dateRange === '1m' ? 'default' : 'outline'}
+                            onClick={() => setDateRange('1m')}
+                        >
+                            1 Month
+                        </Button>
+                        <Button 
+                            variant={dateRange === '3m' ? 'default' : 'outline'}
+                            onClick={() => setDateRange('3m')}
+                        >
+                            3 Months
+                        </Button>
+                        <Button 
+                            variant={dateRange === '1y' ? 'default' : 'outline'}
+                            onClick={() => setDateRange('1y')}
+                        >
+                            1 Year
+                        </Button>
+                        <Button 
+                            variant={dateRange === 'all' ? 'default' : 'outline'}
+                            onClick={() => setDateRange('all')}
+                        >
+                            All Time
+                        </Button>
+                    </div>
+                    <div className="text-lg font-semibold">
+                        Total for {getRangeLabel(dateRange)}: {Number.isInteger(periodTotal) ? periodTotal : periodTotal.toFixed(2)}
+                    </div>
                 </div>
                 <div style={{ width: "100%", height: 400 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -109,11 +126,16 @@ const AllExpensesChart: React.FC<AllExpensesChartProps> = ({ expenses }) => {
                                 interval={formattedData.length > 30 ? 6 : 0}
                             />
                             <YAxis 
-                                tickFormatter={(value) => `${value}`}
+                                tickFormatter={(value) => 
+                                    Number.isInteger(value) ? value.toString() : value.toFixed(2)
+                                }
                                 width={80}
                             />
                             <Tooltip 
-                                formatter={(value: number) => [`${value.toFixed(2)}`, 'Daily Total']}
+                                formatter={(value: number) => [
+                                    Number.isInteger(value) ? value.toString() : value.toFixed(2), 
+                                    'Daily Total'
+                                ]}
                                 labelFormatter={(label) => `Date: ${label}`}
                             />
                             <Legend />

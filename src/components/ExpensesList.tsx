@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Expense {
     id: string;
@@ -21,13 +22,58 @@ interface Props {
     onUpdate: (expense: Expense) => void;
 }
 
+type SortField = 'amount' | 'category' | 'date' | null;
+type SortDirection = 'asc' | 'desc';
+
 const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editedExpense, setEditedExpense] = useState<Expense | null>(null);
+    const [sortField, setSortField] = useState<SortField>(null);
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const sortedExpenses = useMemo(() => {
+        if (!sortField) return expenses;
+
+        return [...expenses].sort((a, b) => {
+            let compareA, compareB;
+
+            switch (sortField) {
+                case 'amount':
+                    compareA = a.amount;
+                    compareB = b.amount;
+                    break;
+                case 'category':
+                    compareA = a.category?.name?.toLowerCase() || '';
+                    compareB = b.category?.name?.toLowerCase() || '';
+                    break;
+                case 'date':
+                    compareA = new Date(a.date).getTime();
+                    compareB = new Date(b.date).getTime();
+                    break;
+                default:
+                    return 0;
+            }
+
+            if (sortDirection === 'asc') {
+                return compareA < compareB ? -1 : compareA > compareB ? 1 : 0;
+            } else {
+                return compareA > compareB ? -1 : compareA < compareB ? 1 : 0;
+            }
+        });
+    }, [expenses, sortField, sortDirection]);
 
     const totalAmount = useMemo(() => {
-        return expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    }, [expenses]);
+        return sortedExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    }, [sortedExpenses]);
 
     const handleEdit = (expense: Expense) => {
         setEditingId(expense.id);
@@ -47,6 +93,13 @@ const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
         setEditedExpense(null);
     };
 
+    const getSortIcon = (field: SortField) => {
+        if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1" />;
+        return sortDirection === 'asc' ? 
+            <ArrowUp className="w-4 h-4 ml-1" /> : 
+            <ArrowDown className="w-4 h-4 ml-1" />;
+    };
+
     return (
         <div>
             <Card className="shadow-md">
@@ -55,14 +108,38 @@ const ExpensesList: FC<Props> = ({ expenses, onDelete, onUpdate }) => {
                         <thead>
                             <tr className="bg-gray-100">
                                 <th className="py-2 px-4 text-left">Comment</th>
-                                <th className="py-2 px-4 text-left">Amount</th>
-                                <th className="py-2 px-4 text-left">Category</th>
-                                <th className="py-2 px-4 text-left">Date</th>
+                                <th 
+                                    className="py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    onClick={() => handleSort('amount')}
+                                >
+                                    <div className="flex items-center">
+                                        Amount
+                                        {getSortIcon('amount')}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    onClick={() => handleSort('category')}
+                                >
+                                    <div className="flex items-center">
+                                        Category
+                                        {getSortIcon('category')}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="py-2 px-4 text-left cursor-pointer hover:bg-gray-200"
+                                    onClick={() => handleSort('date')}
+                                >
+                                    <div className="flex items-center">
+                                        Date
+                                        {getSortIcon('date')}
+                                    </div>
+                                </th>
                                 <th className="py-2 px-4 text-left">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {expenses.map((expense) => (
+                            {sortedExpenses.map((expense) => (
                                 <tr key={expense.id} className="border-b">
                                     <td className="py-2 px-4">
                                         {editingId === expense.id ? (
