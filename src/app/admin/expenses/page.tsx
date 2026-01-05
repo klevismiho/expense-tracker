@@ -7,7 +7,6 @@ import AllExpensesChart from "@/components/AllExpensesChart";
 import MonthlyExpensesChart from "@/components/MonthlyExpensesChart";
 import CurrentMonthExpensesChart from "@/components/CurrentMonthExpensesChart";
 import CurrentWeekExpensesChart from "@/components/CurrentWeekExpensesChart";
-import ExpenseAITips from "@/components/ExpenseAITips";
 
 type Expense = {
   id: string;
@@ -118,13 +117,6 @@ const ExpensesPage = () => {
 
   return (
     <div className="space-y-8">
-      {/* AI Tips Section - Featured at the top */}
-      <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-3xl p-1 shadow-xl">
-        <div className="bg-white rounded-2xl p-6">
-          <ExpenseAITips expenses={expenses} />
-        </div>
-      </div>
-
       {/* Current Period Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CurrentMonthExpensesChart expenses={expenses} />
